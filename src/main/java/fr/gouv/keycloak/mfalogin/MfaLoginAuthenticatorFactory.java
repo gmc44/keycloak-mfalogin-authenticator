@@ -166,6 +166,12 @@ public class MfaLoginAuthenticatorFactory
         property.setType(ProviderConfigProperty.STRING_TYPE);
         property.setHelpText("Enter the Ldap RSA Otp Owener Flag Value");
         configProperties.add(property);
+        property = new ProviderConfigProperty();
+        property.setName(MfaloginConstants.CONF_LDAP_FUNCTIONAL_ACCOUNT_BRANCH);
+        property.setLabel("[Optional] Ldap Functional Account Branch");
+        property.setType(ProviderConfigProperty.STRING_TYPE);
+        property.setHelpText("Enter the Ldap Functional Account Branch (if account matches, otp code is send to a real user account via enter-uid form");
+        configProperties.add(property);
     }
 
     @Override

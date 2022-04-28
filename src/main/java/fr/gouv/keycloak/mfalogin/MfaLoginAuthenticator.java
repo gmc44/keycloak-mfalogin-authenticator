@@ -18,6 +18,7 @@ import org.keycloak.authentication.AuthenticationFlowError;
 import org.keycloak.authentication.authenticators.browser.AbstractUsernameFormAuthenticator;
 import org.keycloak.models.AuthenticatorConfigModel;
 import org.keycloak.models.KeycloakSession;
+import org.keycloak.models.LDAPConstants;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.services.ServicesLogger;
@@ -41,7 +42,7 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
     private Boolean compareDateymd2dmy(String strdateymd, String strdatedmy)
     {
         //exception : if no valid date from ldap, return true
-        if (strdatedmy == null || strdatedmy.trim().isEmpty()) return true;
+        // if (strdatedmy == null || strdatedmy.trim().isEmpty()) return true;
 
         //check
         String[] ar = strdatedmy.trim().split("/");
@@ -56,6 +57,7 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
 
         String mobileInput          = formData.getFirst("mobileInput");
         String codeInput            = formData.getFirst("codeInput");
+        String uidInput             = formData.getFirst("uidInput");
         String secondFactorInput    = formData.getFirst("secondFactor");
         String newMobileInput       = formData.getFirst("newMobile");
         
@@ -150,6 +152,14 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
         
         }
         
+
+        // (4) Back from enter-uid
+        else if (uidInput != null) {
+            String sendMsg = generateAndSendCode(context,uidInput);
+            context.form().setAttribute("sendMsg", sendMsg);
+            ServicesLogger.LOGGER.info("boite fonctionnelle "+uidInput+" => "+uid+": send code "+sendMsg);
+            context.challenge(context.form().createForm(FTL_ENTER_CODE));
+        }
         // (2) Back from enter-mobile
         else if (mobileInput != null) {
             String birthdateInput = formData.getFirst("birthdateInput");
@@ -164,7 +174,7 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
                 if (compareDateymd2dmy(birthdateInput,birthdateLdap)) {
                     ServicesLogger.LOGGER.info(uid+": ok user and mobile = "+mobileInput+" birthdate = "+birthdateInput+" birthdateLdap = "+birthdateLdap);
                     context.getAuthenticationSession().setAuthNote(NOTE_USER_MOBILE, mobileInput);
-                    String sendMsg = generateAndSendCode(context);
+                    String sendMsg = generateAndSendCode(context,uid);
                     context.form().setAttribute("sendMsg", sendMsg);
                     ServicesLogger.LOGGER.info(uid+": send code "+sendMsg);
                     context.challenge(context.form().createForm(FTL_ENTER_CODE));
@@ -188,7 +198,7 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
     /**
      * calls secureCode class method to generate code and sends it to the flow attached users mobile
      */
-    private String generateAndSendCode(AuthenticationFlowContext context)
+    private String generateAndSendCode(AuthenticationFlowContext context, String uid)
     {
         // Get Extension Parameters
         AuthenticatorConfigModel config = context.getAuthenticatorConfig();
@@ -207,7 +217,7 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
         
         // Get mobileNote and uid from context
         String mobileNote = context.getAuthenticationSession().getAuthNote(NOTE_USER_MOBILE);
-        String uid = context.getUser().getUsername();
+        // String uid = context.getUser().getUsername();
 
         StringEntity data = new StringEntity("{\"uid\":\"" + uid + "\",\"code\":\"" + code + "\",\"num\":\"" + mobileNote + "\"}","utf-8");
 
@@ -237,10 +247,14 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
         String LdapUserOtpviamailValue = config.getConfig().get(CONF_LDAP_USER_OTPVIAMAIL_VALUE);
         String LdapUserRsaotpownerAttribute = config.getConfig().get(CONF_LDAP_USER_RSAOTPOWNER_ATTRIBUTE);
         String LdapUserRsaotpownerValue = config.getConfig().get(CONF_LDAP_USER_RSAOTPOWNER_VALUE);
+        String LdapFunctionalAccountBranch = config.getConfig().get(CONF_LDAP_FUNCTIONAL_ACCOUNT_BRANCH);
         
         // Get RSAOtp Owner Attribute
         List<Object> rsaOtpOwner = user.getAttributeStream(LdapUserRsaotpownerAttribute).collect(Collectors.toList());
         
+        // Get User Ldap Branch
+        String userDN = user.getFirstAttribute(LDAPConstants.LDAP_ENTRY_DN);
+
         // Get Otp Via Mail Attribute
         List<Object> otpViaMail = user.getAttributeStream(LdapUserOtpviamailAttribute).collect(Collectors.toList());
 
@@ -249,13 +263,17 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
         // IF (OTP Owner)               AND (no SMS note)   => Form otp-router
         if (rsaOtpOwner.contains(LdapUserRsaotpownerValue) && secondFactorNote == null) {
             redirect = FTL_OTP_ROUTER;
+        // IF (account is functional) => no birthdate => Form enter-uid
+        } else if (userDN.contains(LdapFunctionalAccountBranch)) {
+            ServicesLogger.LOGGER.info(uid+" est un compte fonctionnel");
+            redirect = FTL_ENTER_UID;
         } else {
             // Get kcUserMobile
             String kcUserMobile = user.getFirstAttribute(KeycloakUserMobileAttribute);
             ServicesLogger.LOGGER.info(uid+": mobile = "+kcUserMobile);
             //SI (kcUserMobile)      OR (Otpviamail flag isset)
             if (kcUserMobile != null || otpViaMail.contains(LdapUserOtpviamailValue)) {
-                String sendMsg = generateAndSendCode(context);
+                String sendMsg = generateAndSendCode(context,uid);
                 context.form().setAttribute("sendMsg", sendMsg);
                 ServicesLogger.LOGGER.info(uid+": retour send code "+sendMsg);
                 redirect = FTL_ENTER_CODE;

@@ -28,11 +28,13 @@ public class MfaloginConstants {
     public static final String CONF_LDAP_USER_RSAOTPOWNER_VALUE =               "mfalogin.ldap.user.rsaowner.value";
     public static final String CONF_LDAP_USER_OTPVIAMAIL_ATTRIBUTE =                "mfalogin.ldap.user.otpviamail.attribute";
     public static final String CONF_LDAP_USER_OTPVIAMAIL_VALUE =                "mfalogin.ldap.user.otpviamail.value";
+    public static final String CONF_LDAP_FUNCTIONAL_ACCOUNT_BRANCH =            "mfalogin.ldap.functional.account.branch";
 
     //Other Constants
     // FTL
     public static final String FTL_ENTER_MOBILE         = "enter-mobile.ftl";
     public static final String FTL_ENTER_CODE           = "enter-code.ftl";
+    public static final String FTL_ENTER_UID            = "enter-uid.ftl";
     public static final String FTL_OTP_ROUTER           = "otp-router.ftl";
 
     // NOTES
