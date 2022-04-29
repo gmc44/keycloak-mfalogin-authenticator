@@ -80,10 +80,10 @@
               <label for="code">Votre code de v&eacute;rification</label>
               <input tabindex="1" id="codeInput" name="codeInput"  type="text" type="number" pattern="\d{6}" placeholder="" size="6" required autofocus autocomplete="off" />
               <p id="codeError" class="valid">entrez les 6 chiffres</p>
+              <div id="bloc_submit" class="invalid">
+                <input tabindex="4" class="${properties.kcButtonClass!} ${properties.kcButtonPrimaryClass!} ${properties.kcButtonLargeClass!}" name="sendCode" id="sendCode" type="submit" value="${msg("doLogIn")}"}"/>
+              </div>
             </div>
-          </div>
-          <div id="bloc_submit" class="invalid">
-            <input tabindex="4" class="${properties.kcButtonClass!} ${properties.kcButtonPrimaryClass!} ${properties.kcButtonLargeClass!}" name="sendCode" id="sendCode" type="submit" value="${msg("doLogIn")}"}"/>
           </div>
           <details>
             <summary>Je n'ai pas reçu le code</summary>

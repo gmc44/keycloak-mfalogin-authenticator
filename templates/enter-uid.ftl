@@ -46,11 +46,11 @@
             <div id="bloc_user">
               <p>Votre identifiant de messagerie personnel <input tabindex="1" id="uidInput" class="${properties.kcInputClass!}" name="uidInput"  type="text" pattern="^[a-zA-Z\-]+\d*" size="10" autofocus autocomplete="on" required/></p>
               <p id="uidError" class="valid">vérifiez votre saisie</p>
+              <div id="bloc_submit">
+                <input tabindex="3" class="${properties.kcButtonClass!} ${properties.kcButtonPrimaryClass!} ${properties.kcButtonLargeClass!}" name="sendCode" id="sendCode" type="submit" value="Recevoir mon code"/>
+              </div>
             </div>
           </div>
-            <div id="bloc_submit">
-              <input tabindex="3" class="${properties.kcButtonClass!} ${properties.kcButtonPrimaryClass!} ${properties.kcButtonLargeClass!}" name="sendCode" id="sendCode" type="submit" value="Recevoir mon code"/>
-            </div>
           </form>
             </div>
       </div>
