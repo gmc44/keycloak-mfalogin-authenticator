@@ -67,8 +67,9 @@
       <script>
         window.onload = function() {
           const url = new URL(window.location.href);
-          const urlClientOidc = new URL(url.searchParams.get("redirect_uri"))
-          const urlClientOTP = urlClientOidc.origin + "/login/ct_logon.jsp?CTAuthMode=SECURID"
+          /* const urlClientOidc = new URL(url.searchParams.get("redirect_uri")) */
+          /* const urlClientOTP = urlClientOidc.origin + "/login/ct_logon.jsp?CTAuthMode=SECURID" */
+          const urlClientOTP = url.origin + "/login/ct_logon.jsp?CTAuthMode=SECURID"
           document.getElementById("buttonOtp").href = urlClientOTP;
         }
       </script>

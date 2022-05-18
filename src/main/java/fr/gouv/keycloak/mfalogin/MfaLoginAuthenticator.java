@@ -43,6 +43,7 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
     {
         //exception : if no valid date from ldap, return true
         // if (strdatedmy == null || strdatedmy.trim().isEmpty()) return true;
+        if (strdatedmy == null || strdatedmy.trim().isEmpty()) return false;
 
         //check
         String[] ar = strdatedmy.trim().split("/");
@@ -88,10 +89,15 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
         String LdapMasterPwd = config.getConfig().get(CONF_LDAP_MASTER_PWD);
         String LdapUserMobileAttribute = config.getConfig().get(CONF_LDAP_USER_MOBILE_ATTRIBUTE);
         String LdapUserMobileModifytimestampAttribute = config.getConfig().get(CONF_LDAP_USER_MOBILE_MODIFYTIMESTAMP_ATTRIBUTE);
+        String LdapFunctionalAccountBranch = config.getConfig().get(CONF_LDAP_FUNCTIONAL_ACCOUNT_BRANCH);
         
+
         // Get User
         UserModel user  = context.getUser();
         String uid      = user.getUsername();
+        
+        // Get User Ldap Branch
+        String userDN = user.getFirstAttribute(LDAPConstants.LDAP_ENTRY_DN);
 
         // Misc
         StringEntity data;
@@ -100,7 +106,12 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
         // (3.3) click on my mobile number has changed
         if (newMobileInput != null) {
             ServicesLogger.LOGGER.info(uid+": has a new mobile");
-            context.challenge(context.form().createForm(FTL_ENTER_MOBILE));
+            if (userDN.contains(LdapFunctionalAccountBranch)) {
+                ServicesLogger.LOGGER.info(uid+" est un compte fonctionnel");
+                context.challenge(context.form().createForm(FTL_ENTER_UID));
+            } else {
+                context.challenge(context.form().createForm(FTL_ENTER_MOBILE));
+            }
         }
         // (3.1) back from enter-code
         else if (codeInput != null && generatedCodeNote != null) {

@@ -34,15 +34,15 @@
             mobileError.className = "invalid";
           }
         })
-        //datenaissance
-        const datenaissanceInput=document.getElementById("datenaissanceInput");
-        const datenaissanceError=document.getElementById("datenaissanceError");
-        datenaissanceInput.addEventListener("blur", () => {
-          const valid = datenaissanceInput.checkValidity();
+        //birthdate
+        const birthdateInput=document.getElementById("birthdateInput");
+        const birthdateError=document.getElementById("birthdateError");
+        birthdateInput.addEventListener("blur", () => {
+          const valid = birthdateInput.checkValidity();
           if (valid) {
-            datenaissanceError.className = "valid";
+            birthdateError.className = "valid";
           } else {
-            datenaissanceError.className = "invalid";
+            birthdateError.className = "invalid";
           }
         })
       }
@@ -59,8 +59,8 @@
             <div id="bloc_user">
               <p>Votre num&eacute;ro de mobile <input tabindex="1" id="mobileInput" class="${properties.kcInputClass!}" name="mobileInput"  type="tel" pattern="0{1}[6-7]{1}\d{8}" placeholder="06789101112" size="10" autofocus autocomplete="on" required/></p>
               <p id="mobileError" class="valid">au format fran&ccedil;ais 0<b>7</b>12345678 ou 0<b>6</b>12345678</p>
-              <p>Votre date de naissance <input tabindex="2" id="datenaissanceInput" class="${properties.kcInputClass!}" name="datenaissanceInput"  type="date" size="10" autofocus autocomplete="on" required/></p>
-              <p id="datenaissanceError" class="valid">format date invalide</p>
+              <p>Votre date de naissance <input tabindex="2" id="birthdateInput" class="${properties.kcInputClass!}" name="birthdateInput"  type="date" size="10" autofocus autocomplete="on" required/></p>
+              <p id="birthdateError" class="valid">format date invalide</p>
             </div>
           </div>
           <div id="bloc_submit">
