@@ -67,10 +67,19 @@
       <script>
         window.onload = function() {
           const url = new URL(window.location.href);
-          /* v2 : */
-          /* const urlClientOidc = new URL(url.searchParams.get("redirect_uri")) */
-          /* const urlClientOTP = urlClientOidc.origin + "/login/ct_logon.jsp?CTAuthMode=SECURID" */
-          const urlClientOTP = url.origin + "/login/ct_logon.jsp?CTAuthMode=SECURID&CT_ORIG_URL=" + encodeURIComponent(url);
+          const urlClientOidc = new URL(url.searchParams.get("redirect_uri"));
+          let urlClientOTP = "";
+          if (urlClientOidc.origin.substring(0,14) == "https://webmel") {
+            /* v2 */
+            urlClientOTP = urlClientOidc.origin + "/login/ct_logon.jsp?CTAuthMode=SECURID";
+          } else {
+            /* v3 */
+            urlClientOTP = url.origin + "/login/ct_logon.jsp?CTAuthMode=SECURID&CT_ORIG_URL=" + encodeURIComponent(url);
+          }
+                    
+          console.log("urlClientOidc="+urlClientOidc);
+          console.log("urlClientOTP="+urlClientOTP);
+
           document.getElementById("buttonOtp").href = urlClientOTP;
         }
       </script>
