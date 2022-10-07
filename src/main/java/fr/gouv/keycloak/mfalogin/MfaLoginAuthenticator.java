@@ -3,6 +3,7 @@ package fr.gouv.keycloak.mfalogin;
 import static fr.gouv.keycloak.mfalogin.MfaloginConstants.*;
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -26,7 +27,6 @@ import org.keycloak.services.ServicesLogger;
 public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
 {
     private SecureCode  secureCode;
-    private Api         api = new Api();
 
     public MfaLoginAuthenticator(SecureCode secureCode)
     {
@@ -41,13 +41,24 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
      */
     private Boolean compareDateymd2dmy(String strdateymd, String strdatedmy)
     {
-        //exception : if no valid date from ldap, return true
-        // if (strdatedmy == null || strdatedmy.trim().isEmpty()) return true;
         if (strdatedmy == null || strdatedmy.trim().isEmpty()) return false;
 
         //check
         String[] ar = strdatedmy.trim().split("/");
         return (ar.length == 3 && (ar[2]+"-"+ar[1]+"-"+ar[0]).equals(strdateymd)) || (strdateymd.trim().equals(strdatedmy.trim())); //date in format 22/12/2022 from HTML5 form
+    }
+
+    //genModifyTimeStamp ldap string
+    /**
+     * genModifyTimeStamp
+     * @return
+     */
+    private String genModifyTimeStamp()
+    {
+        DateFormat format = new SimpleDateFormat("yyyyMMddHHmmsszzz", Locale.FRANCE);
+        format.setTimeZone(TimeZone.getTimeZone("CET"));
+        Date date = new Date();
+        return format.format(date);
     }
 
     @Override
@@ -57,6 +68,7 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
         MultivaluedMap<String, String> formData = context.getHttpRequest().getDecodedFormParameters();
 
         String mobileInput          = formData.getFirst("mobileInput");
+        String emailInput           = formData.getFirst("emailInput");
         String codeInput            = formData.getFirst("codeInput");
         String uidInput             = formData.getFirst("uidInput");
         String secondFactorInput    = formData.getFirst("secondFactor");
@@ -66,12 +78,16 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
         String generatedCodeNote   = context.getAuthenticationSession().getAuthNote(NOTE_GENERATED_CODE);
         String timeStampNote       = context.getAuthenticationSession().getAuthNote(NOTE_TIMESTAMP);
         String mobileNote          = context.getAuthenticationSession().getAuthNote(NOTE_USER_MOBILE);
+        String emailNote          = context.getAuthenticationSession().getAuthNote(NOTE_USER_EMAIL);
 
         // Get Extension Parameters
         AuthenticatorConfigModel config = context.getAuthenticatorConfig();
         String KeycloakUserMobileAttribute = config.getConfig().get(CONF_KEYCLOAK_USER_MOBILE_ATTRIBUTE);
         String KeycloakUserMobileModifytimestampAttribute = config.getConfig().get(CONF_KEYCLOAK_USER_MOBILE_MODIFYTIMESTAMP_ATTRIBUTE);
-        String KeycloakUserBirthdateAttribute = config.getConfig().get(CONF_KEYCLOAK_USER_BIRTHDATE_ATTRIBUTE);
+        String KeycloakUserEmailAttribute = config.getConfig().get(CONF_KEYCLOAK_USER_EMAIL_ATTRIBUTE);
+        String KeycloakUserEmailModifytimestampAttribute = config.getConfig().get(CONF_KEYCLOAK_USER_EMAIL_MODIFYTIMESTAMP_ATTRIBUTE);
+        String KeycloakUserEnrollfactor1Attribute = config.getConfig().get(CONF_KEYCLOAK_USER_ENROLLFACTOR1_ATTRIBUTE);
+        String KeycloakUserEnrollfactor2Attribute = config.getConfig().get(CONF_KEYCLOAK_USER_ENROLLFACTOR2_ATTRIBUTE);
         //API
         String ApiRootUrl = config.getConfig().get(CONF_API_ROOT_URL);
         String ApiTokenid = config.getConfig().get(CONF_API_TOKENID);
@@ -89,9 +105,11 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
         String LdapMasterPwd = config.getConfig().get(CONF_LDAP_MASTER_PWD);
         String LdapUserMobileAttribute = config.getConfig().get(CONF_LDAP_USER_MOBILE_ATTRIBUTE);
         String LdapUserMobileModifytimestampAttribute = config.getConfig().get(CONF_LDAP_USER_MOBILE_MODIFYTIMESTAMP_ATTRIBUTE);
+        String LdapUserEmailAttribute = config.getConfig().get(CONF_LDAP_USER_EMAIL_ATTRIBUTE);
+        String LdapUserEmailModifytimestampAttribute = config.getConfig().get(CONF_LDAP_USER_EMAIL_MODIFYTIMESTAMP_ATTRIBUTE);
+        String LdapUserPreferedMfaAttribute = config.getConfig().get(CONF_LDAP_USER_PREFERED_MFA_ATTRIBUTE);
         String LdapFunctionalAccountBranch = config.getConfig().get(CONF_LDAP_FUNCTIONAL_ACCOUNT_BRANCH);
-        
-
+    
         // Get User
         UserModel user  = context.getUser();
         String uid      = user.getUsername();
@@ -103,6 +121,26 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
         StringEntity data;
         String res;
 
+        // Api
+        Api api = new Api(ApiRootUrl, ApiTokenid, ApiToken);
+        Api.Ldap ldapApi = api.getLdapConnexion(LdapMasterDn, LdapMasterPwd, uid);
+        
+
+    /**
+     * emailAlert
+     * @param ALERT_FROM Sender Email
+     * @param ALERT_TO Recipient Email
+     * @param ALERT_SUBJECT Email Subject
+     * @param ALERT_MSG Email Body
+     * @return
+     */
+    // private void emailAlert(String ALERT_FROM, String ALERT_TO, String ALERT_SUBJECT, String ALERT_MSG)
+    // {
+    //     StringEntity data = new StringEntity("{\"from\":\"" + ALERT_FROM + "\",\"to\":[\"" + ALERT_TO + "\"],\"subject\":\"" + ALERT_SUBJECT + "\",\"body\":\"" + ALERT_MSG + "\"}","utf-8");
+    //     String msgres = api.post(ApiEmailSend, data);
+    //     ServicesLogger.LOGGER.info(uid+": Send Alert = "+msgres);
+    // }
+
         // (3.3) click on my mobile number has changed
         if (newMobileInput != null) {
             ServicesLogger.LOGGER.info(uid+": has a new mobile");
@@ -110,7 +148,7 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
                 ServicesLogger.LOGGER.info(uid+" est un compte fonctionnel");
                 context.challenge(context.form().createForm(FTL_ENTER_UID));
             } else {
-                context.challenge(context.form().createForm(FTL_ENTER_MOBILE));
+                context.challenge(context.form().createForm(FTL_SELF_ENROLL));
             }
         }
         // (3.1) back from enter-code
@@ -118,44 +156,78 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
 
             if (secureCode.isValid(codeInput, generatedCodeNote, timeStampNote, 5, 2)) {
                 
-                String mobileLdap = user.getFirstAttribute(KeycloakUserMobileAttribute);
-                ServicesLogger.LOGGER.info(uid+": kcUserMobile = "+mobileLdap);
-                
-                //Store in Ldap ?
-                if ((mobileLdap == null) || ((mobileNote != null) && (mobileLdap != mobileNote))) {
+                ServicesLogger.LOGGER.info(uid+": emailNote = >"+emailNote+"<   mobileNote >"+mobileNote+"<");
+                String preferedMfa = user.getFirstAttribute(LdapUserPreferedMfaAttribute);
 
-                    // mobile
-                    String addOrReplaceMobile = mobileLdap != null ? ApiLdapModattr : ApiLdapAddattr; //add or modify ?
-                    data = new StringEntity("{\"bind_dn\":\"" + LdapMasterDn + "\",\"bind_pwd\":\"" + LdapMasterPwd + "\",\"uid\":\"" + uid + "\",\"attr\":\""+LdapUserMobileAttribute+"\",\"value\":\"" + mobileNote + "\"}","utf-8");
-                    res = api.post(ApiRootUrl, ApiTokenid, ApiToken, addOrReplaceMobile + "/", data);
-                    ServicesLogger.LOGGER.info(uid+": Connexion OK, storing LDAP "+LdapUserMobileAttribute+" = "+res);
-                    
-                    // mobilemodifytimestamp
-                    String addOrReplaceMobileModifyTimeStamp = user.getFirstAttribute(KeycloakUserMobileModifytimestampAttribute) != null ? ApiLdapModattr : ApiLdapAddattr; //add or modify ?
-                    DateFormat format = new SimpleDateFormat("yyyyMMddHHmmsszzz", Locale.FRANCE);
-                    format.setTimeZone(TimeZone.getTimeZone("CET"));
-                    Date date = new Date();
-                    String mobiledermaj = format.format(date);
-                    data = new StringEntity("{\"bind_dn\":\"" + LdapMasterDn + "\",\"bind_pwd\":\"" + LdapMasterPwd + "\",\"uid\":\"" + uid + "\",\"attr\":\""+LdapUserMobileModifytimestampAttribute+"\",\"value\":\"" + mobiledermaj + "\"}","utf-8");
-                    res = api.post(ApiRootUrl, ApiTokenid, ApiToken, addOrReplaceMobileModifyTimeStamp + "/", data);
-                    ServicesLogger.LOGGER.info(uid+": Connexion OK, storing LDAP "+LdapUserMobileModifytimestampAttribute+" = "+res);
+                if (mobileNote != null) {
+                    //cas mobile
+                    String mobileLdap = user.getFirstAttribute(KeycloakUserMobileAttribute);
+                    ServicesLogger.LOGGER.info(uid+": kcUserMobile = "+mobileLdap);
 
-                    // send Alert email to admin
-                    String ALERTE_EXP     = AdminEmail;
-                    String ALERTE_DST     = AdminEmail;
-                    String ALERTE_SUJET   = AlertSubject + " " + uid + " : " + mobileNote;
-                    String ALERTE_MSG     = AlertMessage + " " + uid + " : " + mobileNote;
-                    
-                    data = new StringEntity("{\"from\":\"" + ALERTE_EXP + "\",\"to\":[\"" + ALERTE_DST + "\"],\"subject\":\"" + ALERTE_SUJET + "\",\"body\":\"" + ALERTE_MSG + "\"}","utf-8");
-                    String msgres = api.post(ApiRootUrl, ApiTokenid, ApiToken, ApiEmailSend, data);
-                    ServicesLogger.LOGGER.info(uid+": Send Alert = "+msgres);
+                    //Store/Update Ldap Attribute
+                    if ((mobileLdap == null) || ((mobileNote != null) && (mobileLdap != mobileNote))) {
+                        // save mobile
+                        ldapApi.post(mobileLdap != null ? ApiLdapModattr : ApiLdapAddattr, LdapUserMobileAttribute, mobileNote);
+                        // save mobilemodifytimestamp
+                        ldapApi.post(user.getFirstAttribute(LdapUserMobileModifytimestampAttribute) != null ? ApiLdapModattr : ApiLdapAddattr, LdapUserMobileModifytimestampAttribute, genModifyTimeStamp());
+                        // update preferedMfa
+                        if (preferedMfa != "sms") { ldapApi.post(ApiLdapModattr, LdapUserPreferedMfaAttribute, "sms"); }
 
-                    // send Notification to user
-                    data = new StringEntity("{\"uid\":\"" + uid + "\"}","utf-8");
-                    String msgresnotif = api.post(ApiRootUrl, ApiTokenid, ApiToken, ApiMfaSendUserNotif,data);
-                    ServicesLogger.LOGGER.info(uid+": Send Notif = "+msgresnotif);
+                        // send Alert email to admin
+                        String ALERT_FROM     = AdminEmail;
+                        String ALERT_TO     = AdminEmail;
+                        String ALERT_SUBJECT   = AlertSubject + " " + uid + " : " + mobileNote;
+                        String ALERT_MSG     = AlertMessage + " " + uid + " : " + mobileNote;
+                        
+                        data = new StringEntity("{\"from\":\"" + ALERT_FROM + "\",\"to\":[\"" + ALERT_TO + "\"],\"subject\":\"" + ALERT_SUBJECT + "\",\"body\":\"" + ALERT_MSG + "\"}","utf-8");
+                        String msgres = api.post(ApiEmailSend, data);
+                        ServicesLogger.LOGGER.info(uid+": Send Alert = "+msgres);
+
+                        // send Notification to user
+                        data = new StringEntity("{\"uid\":\"" + uid + "\"}","utf-8");
+                        String msgresnotif = api.post(ApiMfaSendUserNotif,data);
+                        ServicesLogger.LOGGER.info(uid+": Send Notif = "+msgresnotif);
+                    }
+                    context.success();
+                } else if (emailNote != null) {
+                    //cas email
+                    String emailLdap = user.getFirstAttribute(KeycloakUserEmailAttribute);
+                    ServicesLogger.LOGGER.info(uid+": kcUserEmail = "+emailLdap);
+
+                    //Store/Update Ldap Attribute
+                    if ((emailLdap == null) || ((emailNote != null) && (emailLdap != emailNote))) {
+                        // save email
+                        ldapApi.post(emailLdap != null ? ApiLdapModattr : ApiLdapAddattr, LdapUserEmailAttribute, emailNote);
+                        // save mobilemodifytimestamp
+                        ldapApi.post(user.getFirstAttribute(LdapUserEmailModifytimestampAttribute) != null ? ApiLdapModattr : ApiLdapAddattr, LdapUserEmailModifytimestampAttribute, genModifyTimeStamp());
+                        // update preferedMfa
+                        if (preferedMfa != "mail") { ldapApi.post(ApiLdapModattr, LdapUserPreferedMfaAttribute, "mail"); }
+
+                        // send Alert email to admin
+                        String ALERT_FROM     = AdminEmail;
+                        String ALERT_TO     = AdminEmail;
+                        String ALERT_SUBJECT   = AlertSubject + " " + uid + " : " + emailNote;
+                        String ALERT_MSG     = AlertMessage + " " + uid + " : " + emailNote;
+                        
+                        data = new StringEntity("{\"from\":\"" + ALERT_FROM + "\",\"to\":[\"" + ALERT_TO + "\"],\"subject\":\"" + ALERT_SUBJECT + "\",\"body\":\"" + ALERT_MSG + "\"}","utf-8");
+                        String msgres = api.post(ApiEmailSend, data);
+                        ServicesLogger.LOGGER.info(uid+": Send Alert = "+msgres);
+
+                        // send Notification to user
+                        data = new StringEntity("{\"uid\":\"" + uid + "\"}","utf-8");
+                        String msgresnotif = api.post(ApiMfaSendUserNotif,data);
+                        ServicesLogger.LOGGER.info(uid+": Send Notif = "+msgresnotif);
+                    }
+                    context.success();                    
+                } else {
+                    context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS,
+                                             context.form().createForm(smartForm(context)));
                 }
-                context.success();
+                
+                
+                
+                
+                
             } else {
                 context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS,
                                          context.form().createForm(smartForm(context)));
@@ -171,26 +243,53 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
             ServicesLogger.LOGGER.info("boite fonctionnelle "+uidInput+" => "+uid+": send code "+sendMsg);
             context.challenge(context.form().createForm(FTL_ENTER_CODE));
         }
-        // (2) Back from enter-mobile
-        else if (mobileInput != null) {
-            String birthdateInput = formData.getFirst("birthdateInput");
-            ServicesLogger.LOGGER.info(uid+": from mobile = "+mobileInput+" birthdate = "+birthdateInput);
+        // (2.1) Back from self-enroll
+        else if (mobileInput != null || emailInput != null) {
+            //check factor1
+            String enrollfactor1Input = formData.getFirst("enrollfactor1Input");
+            ServicesLogger.LOGGER.info(uid+": enrollfactor1 = "+enrollfactor1Input);
 
             if (user == null || !user.isEnabled()) {
                 ServicesLogger.LOGGER.info(uid+": failed to get user");
                 context.failure(AuthenticationFlowError.INVALID_USER);
             } else {
-                String birthdateLdap = user.getFirstAttribute(KeycloakUserBirthdateAttribute);
-                //check dates
-                if (compareDateymd2dmy(birthdateInput,birthdateLdap)) {
-                    ServicesLogger.LOGGER.info(uid+": ok user and mobile = "+mobileInput+" birthdate = "+birthdateInput+" birthdateLdap = "+birthdateLdap);
-                    context.getAuthenticationSession().setAuthNote(NOTE_USER_MOBILE, mobileInput);
-                    String sendMsg = generateAndSendCode(context,uid);
-                    context.form().setAttribute("sendMsg", sendMsg);
-                    ServicesLogger.LOGGER.info(uid+": send code "+sendMsg);
-                    context.challenge(context.form().createForm(FTL_ENTER_CODE));
+                String enrollfactor1Ldap = user.getFirstAttribute(KeycloakUserEnrollfactor1Attribute);
+                //compareDateymd2dmy : if factor1 is a date (birthdate) : check dates Else just compare strings
+                if (compareDateymd2dmy(enrollfactor1Input,enrollfactor1Ldap)) {
+                    //Factor1 validated
+                    ServicesLogger.LOGGER.info(uid+": enrollfactor1 VALIDATED");
+                    //if mobileForm (factor1 only)
+                    if (mobileInput != null) {
+                        ServicesLogger.LOGGER.info(uid+": ok user and mobile = "+mobileInput+" enrollfactor1 = "+enrollfactor1Input+" enrollfactor1Ldap = "+enrollfactor1Ldap);
+                        context.getAuthenticationSession().setAuthNote(NOTE_USER_MOBILE, mobileInput);
+                        String sendMsg = generateAndSendCode(context,uid);
+                        context.form().setAttribute("sendMsg", sendMsg);
+                        ServicesLogger.LOGGER.info(uid+": send code "+sendMsg);
+                        context.challenge(context.form().createForm(FTL_ENTER_CODE));
+                    //else if emailForm (factor1 + factor2)
+                    } else if (emailInput != null) {
+                        //check factor2
+                        String enrollfactor2Input = formData.getFirst("enrollfactor2Input");
+                        ServicesLogger.LOGGER.info(uid+": enrollfactor2 = "+enrollfactor2Input);
+                        String enrollfactor2Ldap = user.getFirstAttribute(KeycloakUserEnrollfactor2Attribute);
+                        if (enrollfactor2Input.equals(enrollfactor2Ldap)) {
+                            //Factor2 validated
+                            ServicesLogger.LOGGER.info(uid+": enrollfactor2 VALIDATED");
+                            ServicesLogger.LOGGER.info(uid+": ok user and email = "+emailInput+" enrollfactor1 = "+enrollfactor1Input+" enrollfactor1Ldap = "+enrollfactor1Ldap+"     enrollfactor2 = "+enrollfactor2Input+" enrollfactor2Ldap = "+enrollfactor2Ldap);
+                            context.getAuthenticationSession().setAuthNote(NOTE_USER_EMAIL, emailInput);
+                            String sendMsg = generateAndSendCode(context,uid);
+                            context.form().setAttribute("sendMsg", sendMsg);
+                            ServicesLogger.LOGGER.info(uid+": send code "+sendMsg);
+                            context.challenge(context.form().createForm(FTL_ENTER_CODE));
+                        } else {
+                            ServicesLogger.LOGGER.info(uid+": enrollfactor2 FAILED "+enrollfactor2Input+" <> "+enrollfactor2Ldap);
+                            context.failure(AuthenticationFlowError.INVALID_CREDENTIALS);        
+                        }
+
+                    }                  
                 } else {
-                    context.challenge(context.form().createForm(smartForm(context)));
+                    ServicesLogger.LOGGER.info(uid+": enrollfactor1 FAILED "+enrollfactor1Input+" <> "+enrollfactor1Ldap);
+                    context.failure(AuthenticationFlowError.INVALID_CREDENTIALS);
                 }
             }
 
@@ -218,6 +317,7 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
         String ApiTokenid = config.getConfig().get(CONF_API_TOKENID);
         String ApiToken = config.getConfig().get(CONF_API_TOKEN);
         String ApiMfaSendOtp = config.getConfig().get(CONF_API_MFA_SEND_OTP);
+        Api api = new Api(ApiRootUrl, ApiTokenid, ApiToken);
         
         // Code Generation
         String code = secureCode.generateCode(6);
@@ -228,11 +328,11 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
         
         // Get mobileNote and uid from context
         String mobileNote = context.getAuthenticationSession().getAuthNote(NOTE_USER_MOBILE);
-        // String uid = context.getUser().getUsername();
+        String emailNote = context.getAuthenticationSession().getAuthNote(NOTE_USER_EMAIL);
 
-        StringEntity data = new StringEntity("{\"uid\":\"" + uid + "\",\"code\":\"" + code + "\",\"num\":\"" + mobileNote + "\"}","utf-8");
+        StringEntity data = new StringEntity("{\"uid\":\"" + uid + "\",\"code\":\"" + code + "\",\"num\":\"" + mobileNote + "\",\"email\":\"" + emailNote + "\"}","utf-8");
 
-        return api.post(ApiRootUrl, ApiTokenid, ApiToken, ApiMfaSendOtp, data);
+        return api.post(ApiMfaSendOtp, data);
     }
 
     
@@ -254,8 +354,7 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
         // Get Extension Config
         AuthenticatorConfigModel config = context.getAuthenticatorConfig();
         String KeycloakUserMobileAttribute = config.getConfig().get(CONF_KEYCLOAK_USER_MOBILE_ATTRIBUTE);
-        String LdapUserOtpviamailAttribute = config.getConfig().get(CONF_LDAP_USER_OTPVIAMAIL_ATTRIBUTE);
-        String LdapUserOtpviamailValue = config.getConfig().get(CONF_LDAP_USER_OTPVIAMAIL_VALUE);
+        String KeycloakUserEmailAttribute = config.getConfig().get(CONF_KEYCLOAK_USER_EMAIL_ATTRIBUTE);
         String LdapUserRsaotpownerAttribute = config.getConfig().get(CONF_LDAP_USER_RSAOTPOWNER_ATTRIBUTE);
         String LdapUserRsaotpownerValue = config.getConfig().get(CONF_LDAP_USER_RSAOTPOWNER_VALUE);
         String LdapFunctionalAccountBranch = config.getConfig().get(CONF_LDAP_FUNCTIONAL_ACCOUNT_BRANCH);
@@ -266,31 +365,29 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
         // Get User Ldap Branch
         String userDN = user.getFirstAttribute(LDAPConstants.LDAP_ENTRY_DN);
 
-        // Get Otp Via Mail Attribute
-        List<Object> otpViaMail = user.getAttributeStream(LdapUserOtpviamailAttribute).collect(Collectors.toList());
-
         if (rsaOtpOwner.contains(LdapUserRsaotpownerValue)) { ServicesLogger.LOGGER.info(uid+": OTP User"); }
 
         // IF (OTP Owner)               AND (no SMS note)   => Form otp-router
         if (rsaOtpOwner.contains(LdapUserRsaotpownerValue) && secondFactorNote == null) {
             redirect = FTL_OTP_ROUTER;
-        // IF (account is functional) => no birthdate => Form enter-uid
+        // IF (account is functional) => no enrollfactor1 => Form enter-uid
         } else if (userDN.contains(LdapFunctionalAccountBranch)) {
             ServicesLogger.LOGGER.info(uid+" est un compte fonctionnel");
             redirect = FTL_ENTER_UID;
         } else {
             // Get kcUserMobile
             String kcUserMobile = user.getFirstAttribute(KeycloakUserMobileAttribute);
-            ServicesLogger.LOGGER.info(uid+": mobile = "+kcUserMobile);
-            //SI (kcUserMobile)      OR (Otpviamail flag isset)
-            if (kcUserMobile != null || otpViaMail.contains(LdapUserOtpviamailValue)) {
+            String kcUserEmail = user.getFirstAttribute(KeycloakUserEmailAttribute);
+            
+            //IF (kcUserMobile)      OR (kcUserEmail)
+            if (kcUserMobile != null || kcUserEmail != null) {
                 String sendMsg = generateAndSendCode(context,uid);
                 context.form().setAttribute("sendMsg", sendMsg);
                 ServicesLogger.LOGGER.info(uid+": retour send code "+sendMsg);
                 redirect = FTL_ENTER_CODE;
             } else {
                 // no kcUserMobile and no otpViaMail
-                redirect = FTL_ENTER_MOBILE;
+                redirect = FTL_SELF_ENROLL;
             }
         }
         

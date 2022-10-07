@@ -14,17 +14,28 @@ import org.keycloak.services.ServicesLogger;
 
 public class Api
 {
+    private final HttpClient httpClient = HttpClientBuilder.create().build();
+    private final String rootUrl;
+    private final String apiTokenid;
+    private final String apiToken;
+
+    public Api(String rootUrl, String apiTokenid, String apiToken)
+    {
+        this.rootUrl=rootUrl;
+        this.apiTokenid=apiTokenid;
+        this.apiToken=apiToken;
+    }
+
     /**
      * Sends call to api
      * 
      * @return string
      */
    
-    public String post(String rootUrl, String apiTokenid, String apiToken, String path, StringEntity data)
+    public String post(String path, StringEntity data)
     {
         ServicesLogger.LOGGER.info("CALL api = "+rootUrl+" POST path = "+path+" data = "+data);
         String responseString = "";
-        HttpClient httpClient = HttpClientBuilder.create().build();
         try {
             HttpPost request = new HttpPost(rootUrl + path);
             request.addHeader("content-type", "application/json");
@@ -44,5 +55,27 @@ public class Api
             responseString2 = responseString;
         }
         return responseString2;
+    }
+
+    public Ldap getLdapConnexion(String LdapMasterDn, String LdapMasterPwd, String uid) {
+        return new Ldap(this, LdapMasterDn, LdapMasterPwd, uid);
+    }
+
+    public class Ldap {
+        private final Api api;
+        private final String LdapMasterDn;
+        private final String LdapMasterPwd;
+        private final String uid;
+
+        private Ldap(Api api, String login, String pass, String uid) {
+            this.api = api;
+            this.uid = uid;
+            this.LdapMasterDn = login;
+            this.LdapMasterPwd = pass;
+        }
+
+        public String post(String path, String key, String value) {
+            return api.post(path, new StringEntity("{\"bind_dn\":\"" + LdapMasterDn + "\",\"bind_pwd\":\"" + LdapMasterPwd + "\",\"uid\":\"" + uid + "\",\"attr\":\""+key+"\",\"value\":\"" + value + "\"}","utf-8"));
+        }
     }
 }
