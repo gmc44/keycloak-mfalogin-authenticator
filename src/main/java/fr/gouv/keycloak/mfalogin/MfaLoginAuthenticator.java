@@ -78,7 +78,7 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
         String generatedCodeNote   = context.getAuthenticationSession().getAuthNote(NOTE_GENERATED_CODE);
         String timeStampNote       = context.getAuthenticationSession().getAuthNote(NOTE_TIMESTAMP);
         String mobileNote          = context.getAuthenticationSession().getAuthNote(NOTE_USER_MOBILE);
-        String emailNote          = context.getAuthenticationSession().getAuthNote(NOTE_USER_EMAIL);
+        String emailNote           = context.getAuthenticationSession().getAuthNote(NOTE_USER_EMAIL);
 
         // Get Extension Parameters
         AuthenticatorConfigModel config = context.getAuthenticatorConfig();
@@ -126,20 +126,6 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
         Api.Ldap ldapApi = api.getLdapConnexion(LdapMasterDn, LdapMasterPwd, uid);
         
 
-    /**
-     * emailAlert
-     * @param ALERT_FROM Sender Email
-     * @param ALERT_TO Recipient Email
-     * @param ALERT_SUBJECT Email Subject
-     * @param ALERT_MSG Email Body
-     * @return
-     */
-    // private void emailAlert(String ALERT_FROM, String ALERT_TO, String ALERT_SUBJECT, String ALERT_MSG)
-    // {
-    //     StringEntity data = new StringEntity("{\"from\":\"" + ALERT_FROM + "\",\"to\":[\"" + ALERT_TO + "\"],\"subject\":\"" + ALERT_SUBJECT + "\",\"body\":\"" + ALERT_MSG + "\"}","utf-8");
-    //     String msgres = api.post(ApiEmailSend, data);
-    //     ServicesLogger.LOGGER.info(uid+": Send Alert = "+msgres);
-    // }
 
         // (3.3) click on my mobile number has changed
         if (newMobileInput != null) {
@@ -218,15 +204,11 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
                         String msgresnotif = api.post(ApiMfaSendUserNotif,data);
                         ServicesLogger.LOGGER.info(uid+": Send Notif = "+msgresnotif);
                     }
-                    context.success();                    
+                    context.success();      
                 } else {
-                    context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS,
-                                             context.form().createForm(smartForm(context)));
+                    //Access allowed, nothing to save in ldap
+                    context.success();
                 }
-                
-                
-                
-                
                 
             } else {
                 context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS,
