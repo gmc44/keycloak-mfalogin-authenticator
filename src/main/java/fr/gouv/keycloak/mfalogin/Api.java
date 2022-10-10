@@ -74,8 +74,11 @@ public class Api
             this.LdapMasterPwd = pass;
         }
 
-        public String post(String path, String key, String value) {
-            return api.post(path, new StringEntity("{\"bind_dn\":\"" + LdapMasterDn + "\",\"bind_pwd\":\"" + LdapMasterPwd + "\",\"uid\":\"" + uid + "\",\"attr\":\""+key+"\",\"value\":\"" + value + "\"}","utf-8"));
+        public String post(String path, String attr, String value) {
+            return api.post(path, new StringEntity("{\"bind_dn\":\"" + LdapMasterDn + "\",\"bind_pwd\":\"" + LdapMasterPwd + "\",\"uid\":\"" + uid + "\",\"attr\":\""+attr+"\",\"value\":\"" + value + "\"}","utf-8"));
+        }
+        public String smartupdate(String path, String attr, String value, String attrlastupdate) {
+            return api.post(path, new StringEntity("{\"bind_dn\":\"" + LdapMasterDn + "\",\"bind_pwd\":\"" + LdapMasterPwd + "\",\"uid\":\"" + uid + "\",\"attr\":\""+attr+"\",\"value\":\"" + value + "\",\"attrlastupdate\":\"" + attrlastupdate + "\"}","utf-8"));
         }
     }
 }

@@ -16,8 +16,7 @@ public class MfaloginConstants {
     public static final String CONF_API_MFA_SEND_OTP =              "mfalogin.api.mfa.send.otp";
     public static final String CONF_API_MFA_SEND_USER_NOTIF =       "mfalogin.api.mfa.send.user.notif";
     public static final String CONF_API_EMAIL_SEND =                "mfalogin.api.email.send";
-    public static final String CONF_API_LDAP_ADDATTR =              "mfalogin.api.ldap.addattr";
-    public static final String CONF_API_LDAP_MODATTR =              "mfalogin.api.ldap.modattr";
+    public static final String CONF_API_LDAP_SMARTUPDATE =              "mfalogin.api.ldap.smartupdateattr";
      //ADMIN EMAIL
     public static final String CONF_ADMIN_EMAIL =                   "mfalogin.admin.email";
     public static final String CONF_ALERT_SUBJECT =                 "mfalogin.alert.subject";
@@ -30,6 +29,7 @@ public class MfaloginConstants {
     public static final String CONF_LDAP_USER_EMAIL_ATTRIBUTE =                    "mfalogin.ldap.user.email.attribute";
     public static final String CONF_LDAP_USER_EMAIL_MODIFYTIMESTAMP_ATTRIBUTE =    "mfalogin.ldap.user.email.modifytimestamp.attribute";
     public static final String CONF_LDAP_USER_PREFERED_MFA_ATTRIBUTE =             "mfalogin.ldap.user.prefered.mfa.attribute";
+    public static final String CONF_LDAP_USER_PREFERED_MFA_MODIFYTIMESTAMP_ATTRIBUTE =             "mfalogin.ldap.user.prefered.mfa.modifytimestamp.attribute";
     public static final String CONF_LDAP_USER_RSAOTPOWNER_ATTRIBUTE =               "mfalogin.ldap.user.rsaowner.attribute";
     public static final String CONF_LDAP_USER_RSAOTPOWNER_VALUE =               "mfalogin.ldap.user.rsaowner.value";
     public static final String CONF_LDAP_FUNCTIONAL_ACCOUNT_BRANCH =            "mfalogin.ldap.functional.account.branch";

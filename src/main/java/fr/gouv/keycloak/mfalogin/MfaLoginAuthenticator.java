@@ -2,13 +2,7 @@ package fr.gouv.keycloak.mfalogin;
 
 import static fr.gouv.keycloak.mfalogin.MfaloginConstants.*;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -48,18 +42,6 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
         return (ar.length == 3 && (ar[2]+"-"+ar[1]+"-"+ar[0]).equals(strdateymd)) || (strdateymd.trim().equals(strdatedmy.trim())); //date in format 22/12/2022 from HTML5 form
     }
 
-    //genModifyTimeStamp ldap string
-    /**
-     * genModifyTimeStamp
-     * @return
-     */
-    private String genModifyTimeStamp()
-    {
-        DateFormat format = new SimpleDateFormat("yyyyMMddHHmmsszzz", Locale.FRANCE);
-        format.setTimeZone(TimeZone.getTimeZone("CET"));
-        Date date = new Date();
-        return format.format(date);
-    }
 
     @Override
     public void action(AuthenticationFlowContext context)
@@ -94,8 +76,7 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
         String ApiToken = config.getConfig().get(CONF_API_TOKEN);
         String ApiMfaSendUserNotif = config.getConfig().get(CONF_API_MFA_SEND_USER_NOTIF);
         String ApiEmailSend = config.getConfig().get(CONF_API_EMAIL_SEND);
-        String ApiLdapAddattr = config.getConfig().get(CONF_API_LDAP_ADDATTR);
-        String ApiLdapModattr = config.getConfig().get(CONF_API_LDAP_MODATTR);
+        String ApiLdapSmartUpdateattr = config.getConfig().get(CONF_API_LDAP_SMARTUPDATE);
         //ADMIN EMAIL
         String AdminEmail = config.getConfig().get(CONF_ADMIN_EMAIL);
         String AlertSubject = config.getConfig().get(CONF_ALERT_SUBJECT);
@@ -108,6 +89,7 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
         String LdapUserEmailAttribute = config.getConfig().get(CONF_LDAP_USER_EMAIL_ATTRIBUTE);
         String LdapUserEmailModifytimestampAttribute = config.getConfig().get(CONF_LDAP_USER_EMAIL_MODIFYTIMESTAMP_ATTRIBUTE);
         String LdapUserPreferedMfaAttribute = config.getConfig().get(CONF_LDAP_USER_PREFERED_MFA_ATTRIBUTE);
+        String LdapUserPreferedMfaModifytimestampAttribute = config.getConfig().get(CONF_LDAP_USER_PREFERED_MFA_MODIFYTIMESTAMP_ATTRIBUTE);
         String LdapFunctionalAccountBranch = config.getConfig().get(CONF_LDAP_FUNCTIONAL_ACCOUNT_BRANCH);
     
         // Get User
@@ -142,7 +124,7 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
 
             if (secureCode.isValid(codeInput, generatedCodeNote, timeStampNote, 5, 2)) {
                 
-                ServicesLogger.LOGGER.info(uid+": emailNote = >"+emailNote+"<   mobileNote >"+mobileNote+"<");
+                // ServicesLogger.LOGGER.info(uid+": emailNote = >"+emailNote+"<   mobileNote >"+mobileNote+"<");
                 String preferedMfa = user.getFirstAttribute(LdapUserPreferedMfaAttribute);
 
                 if (mobileNote != null) {
@@ -153,11 +135,9 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
                     //Store/Update Ldap Attribute
                     if ((mobileLdap == null) || ((mobileNote != null) && (mobileLdap != mobileNote))) {
                         // save mobile
-                        ldapApi.post(mobileLdap != null ? ApiLdapModattr : ApiLdapAddattr, LdapUserMobileAttribute, mobileNote);
-                        // save mobilemodifytimestamp
-                        ldapApi.post(user.getFirstAttribute(LdapUserMobileModifytimestampAttribute) != null ? ApiLdapModattr : ApiLdapAddattr, LdapUserMobileModifytimestampAttribute, genModifyTimeStamp());
+                        ldapApi.smartupdate(ApiLdapSmartUpdateattr, LdapUserMobileAttribute, mobileNote, LdapUserMobileModifytimestampAttribute);
                         // update preferedMfa
-                        if (preferedMfa != "sms") { ldapApi.post(ApiLdapModattr, LdapUserPreferedMfaAttribute, "sms"); }
+                        if (preferedMfa != "sms") { ldapApi.smartupdate(ApiLdapSmartUpdateattr, LdapUserPreferedMfaAttribute, "sms", LdapUserPreferedMfaModifytimestampAttribute); }
 
                         // send Alert email to admin
                         String ALERT_FROM     = AdminEmail;
@@ -183,11 +163,10 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
                     //Store/Update Ldap Attribute
                     if ((emailLdap == null) || ((emailNote != null) && (emailLdap != emailNote))) {
                         // save email
-                        ldapApi.post(emailLdap != null ? ApiLdapModattr : ApiLdapAddattr, LdapUserEmailAttribute, emailNote);
-                        // save mobilemodifytimestamp
-                        ldapApi.post(user.getFirstAttribute(LdapUserEmailModifytimestampAttribute) != null ? ApiLdapModattr : ApiLdapAddattr, LdapUserEmailModifytimestampAttribute, genModifyTimeStamp());
+                        ldapApi.smartupdate(ApiLdapSmartUpdateattr, LdapUserEmailAttribute, emailNote, LdapUserEmailModifytimestampAttribute);
+
                         // update preferedMfa
-                        if (preferedMfa != "mail") { ldapApi.post(ApiLdapModattr, LdapUserPreferedMfaAttribute, "mail"); }
+                        if (preferedMfa != "mail") { ldapApi.smartupdate(ApiLdapSmartUpdateattr, LdapUserPreferedMfaAttribute, "mail", LdapUserPreferedMfaModifytimestampAttribute); }
 
                         // send Alert email to admin
                         String ALERT_FROM     = AdminEmail;

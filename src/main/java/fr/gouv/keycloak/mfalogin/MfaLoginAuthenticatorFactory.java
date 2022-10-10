@@ -106,16 +106,10 @@ public class MfaLoginAuthenticatorFactory
         property.setHelpText("Enter your Api Path to send an email (POST)");
         configProperties.add(property);
         property = new ProviderConfigProperty();
-        property.setName(MfaloginConstants.CONF_API_LDAP_ADDATTR);
-        property.setLabel("Api Ldap Add Attribute Path");
+        property.setName(MfaloginConstants.CONF_API_LDAP_SMARTUPDATE);
+        property.setLabel("Api Ldap SmartUpdate Attribute Path");
         property.setType(ProviderConfigProperty.STRING_TYPE);
-        property.setHelpText("Enter your Api Path to add an ldap attribute on user (POST)");
-        configProperties.add(property);
-        property = new ProviderConfigProperty();
-        property.setName(MfaloginConstants.CONF_API_LDAP_MODATTR);
-        property.setLabel("Api Ldap Modify Attribute Path");
-        property.setType(ProviderConfigProperty.STRING_TYPE);
-        property.setHelpText("Enter your Api Path to modify an ldap attribute on user (POST)");
+        property.setHelpText("Enter your Api Path to add or replace an ldap attribute on user (POST)");
         configProperties.add(property);
         //ADMIN EMAIL
         property = new ProviderConfigProperty();
@@ -178,6 +172,12 @@ public class MfaLoginAuthenticatorFactory
         property.setLabel("Ldap User Prefered Mfa Attribute");
         property.setType(ProviderConfigProperty.STRING_TYPE);
         property.setHelpText("Enter the Ldap Mfa Prefered Attribute");
+        configProperties.add(property);
+        property = new ProviderConfigProperty();
+        property.setName(MfaloginConstants.CONF_LDAP_USER_PREFERED_MFA_MODIFYTIMESTAMP_ATTRIBUTE);
+        property.setLabel("Ldap User Prefered Mfa ModifyTimeStamp Attribute");
+        property.setType(ProviderConfigProperty.STRING_TYPE);
+        property.setHelpText("Enter the Ldap Mfa Prefered ModifyTimeStamp Attribute");
         configProperties.add(property);
         property = new ProviderConfigProperty();
         property.setName(MfaloginConstants.CONF_LDAP_USER_RSAOTPOWNER_ATTRIBUTE);
