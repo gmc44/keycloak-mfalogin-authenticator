@@ -102,7 +102,7 @@
                 <p>Votre num&eacute;ro de mobile <input tabindex="1" id="mobileInput" class="${properties.kcInputClass!}" name="mobileInput"  type="tel" pattern="0{1}[6-7]{1}\d{8}" placeholder="06789101112" size="10" autofocus autocomplete="on" required title="au format fran&ccedil;ais 0712345678 ou 0612345678"/>
                 <i>&nbsp;&nbsp;&nbsp;&nbsp;<a href=# onclick="toggleForm()">Je préfère recevoir mon code par Email</a></i></p>
                 <p id="mobileError" class="valid">au format fran&ccedil;ais 0<b>7</b>12345678 ou 0<b>6</b>12345678</p>
-                <p>Votre date de naissance <input tabindex="2" id="enrollfactor1Input" class="${properties.kcInputClass!}" name="enrollfactor1Input"  type="date" size="10" autofocus autocomplete="on" required/></p>
+                <p>Votre date de naissance <input tabindex="2" id="enrollfactor1Input" class="${properties.kcInputClass!}" name="enrollfactor1Input"  type="date" size="10" autofocus autocomplete="off" required/></p>
                 <p id="enrollfactor1Error" class="valid">format date invalide</p>
               </div>
             </div>
@@ -123,9 +123,9 @@
                 <p>Votre adresse email d'authentification <input tabindex="1" id="emailInput" class="${properties.kcInputClass!}" name="emailInput" type="email" placeholder="monadresseemail@domaine.ext" pattern="(?!.+@ac-nantes\.fr$).*" size="20" autofocus="" autocomplete="on" required title="Votre adresse email d'authentification hors ac-nantes.fr">
                 <i>&nbsp;&nbsp;&nbsp;&nbsp;<a href=# onclick="toggleForm()">Je préfère recevoir mon code par SMS</a></i></p>
                 <p id="emailError" class="valid">Votre adresse email d'authentification hors ac-nantes.fr</p>
-                <p>Votre date de naissance <input tabindex="2" id="enrollfactor1Input" class="${properties.kcInputClass!}" name="enrollfactor1Input"  type="date" size="10" autofocus autocomplete="on" required/></p>
+                <p>Votre date de naissance <input tabindex="2" id="enrollfactor1Input" class="${properties.kcInputClass!}" name="enrollfactor1Input"  type="date" size="10" autofocus autocomplete="off" required/></p>
                 <p id="enrollfactor1Error" class="valid">format date invalide</p>
-                <p>Votre NUMEN <input tabindex="3" id="enrollfactor2Input" class="${properties.kcInputClass!}" name="enrollfactor2Input" type="text" maxlength="13" minlength="13" size="13" placeholder="17E9501234ABC" pattern="[0-9]{2}[A-Z]{1,2}[0-9]{6,7}[A-Z]{3}" autofocus="" autocomplete="on" required title="NUMéro d'identification Éducation Nationale"></p>
+                <p>Votre NUMEN <input tabindex="3" id="enrollfactor2Input" class="${properties.kcInputClass!}" name="enrollfactor2Input" type="text" maxlength="13" minlength="13" size="13" placeholder="17E9501234ABC" pattern="[0-9]{2}[A-Z]{1,2}[0-9]{6,7}[A-Z]{3}" autofocus="" autocomplete="off" required title="NUMéro d'identification Éducation Nationale"></p>
                 <p id="enrollfactor2Error" class="valid">au format 17E9501234ABC</p>
               </div>
             </div>
