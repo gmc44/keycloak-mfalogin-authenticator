@@ -42,7 +42,7 @@
         const codeError=document.getElementById("codeError");
         const blocSubmit=document.getElementById("bloc_submit");
         const resendCode=document.getElementById("resendCode");
-        const newMobile=document.getElementById("newMobile");
+        const new2fa=document.getElementById("new2fa");
 
         codeInput.focus();
 
@@ -64,7 +64,7 @@
 
         // Descatication du check si click sur Renvoyer ou J'ai changé de numéro
         resendCode.addEventListener("click", () => { codeInput.required = false; })
-        newMobile.addEventListener("click", () => { codeInput.required = false; })
+        new2fa.addEventListener("click", () => { codeInput.required = false; })
 
       }
     </script>
@@ -89,7 +89,7 @@
             <summary>Je n'ai pas reçu le code</summary>
             <div id="formfailed" class="collapse">
               <input tabindex="6" class="${properties.kcButtonClass!}" name="resendCode" id="resendCode" type="submit" value="Renvoyer"/>
-              <input tabindex="7" class="${properties.kcButtonClass!}" name="newMobile" id="newMobile" type="submit" value="J'ai changé de numéro"/>
+              <input tabindex="7" class="${properties.kcButtonClass!}" name="new2fa" id="new2fa" type="submit" value="Je veux changer de second facteur"/>
             </div>
           </details>
         </form>

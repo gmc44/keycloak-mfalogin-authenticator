@@ -72,7 +72,7 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
         String codeInput            = formData.getFirst("codeInput");
         String uidInput             = formData.getFirst("uidInput");
         String secondFactorInput    = formData.getFirst("secondFactor");
-        String newMobileInput       = formData.getFirst("newMobile");
+        String new2faInput          = formData.getFirst("new2fa");
         
         // Get Notes
         String generatedCodeNote   = context.getAuthenticationSession().getAuthNote(NOTE_GENERATED_CODE);
@@ -128,8 +128,8 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
 
 
         // (3.3) click on my mobile number has changed
-        if (newMobileInput != null) {
-            ServicesLogger.LOGGER.info(uid+": has a new mobile");
+        if (new2faInput != null) {
+            ServicesLogger.LOGGER.info(uid+": has a new 2fa");
             if (userDN.contains(LdapFunctionalAccountBranch)) {
                 ServicesLogger.LOGGER.info(uid+" est un compte fonctionnel");
                 context.challenge(context.form().createForm(FTL_ENTER_UID));
