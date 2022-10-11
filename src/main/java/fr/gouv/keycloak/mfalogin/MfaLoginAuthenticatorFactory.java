@@ -37,24 +37,12 @@ public class MfaLoginAuthenticatorFactory
         property.setType(ProviderConfigProperty.STRING_TYPE);
         property.setHelpText("Enter the keycloak user mobile attribute");
         configProperties.add(property);
-        property = new ProviderConfigProperty();
-        property.setName(MfaloginConstants.CONF_KEYCLOAK_USER_MOBILE_MODIFYTIMESTAMP_ATTRIBUTE);
-        property.setLabel("Keycloak User Mobile ModifyTimeStamp Attribute");
-        property.setType(ProviderConfigProperty.STRING_TYPE);
-        property.setHelpText("Enter the keycloak user mobile modifytimestamp attribute");
-        configProperties.add(property);
         //KEYCLOAK USER EMAIL
         property = new ProviderConfigProperty();
         property.setName(MfaloginConstants.CONF_KEYCLOAK_USER_EMAIL_ATTRIBUTE);
         property.setLabel("Keycloak User Email Attribute");
         property.setType(ProviderConfigProperty.STRING_TYPE);
         property.setHelpText("Enter the keycloak user email attribute");
-        configProperties.add(property);
-        property = new ProviderConfigProperty();
-        property.setName(MfaloginConstants.CONF_KEYCLOAK_USER_EMAIL_MODIFYTIMESTAMP_ATTRIBUTE);
-        property.setLabel("Keycloak User Email ModifyTimeStamp Attribute");
-        property.setType(ProviderConfigProperty.STRING_TYPE);
-        property.setHelpText("Enter the keycloak user email modifytimestamp attribute");
         configProperties.add(property);
         property = new ProviderConfigProperty();
         property.setName(MfaloginConstants.CONF_KEYCLOAK_USER_ENROLLFACTOR1_ATTRIBUTE);

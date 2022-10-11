@@ -65,9 +65,7 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
         // Get Extension Parameters
         AuthenticatorConfigModel config = context.getAuthenticatorConfig();
         String KeycloakUserMobileAttribute = config.getConfig().get(CONF_KEYCLOAK_USER_MOBILE_ATTRIBUTE);
-        String KeycloakUserMobileModifytimestampAttribute = config.getConfig().get(CONF_KEYCLOAK_USER_MOBILE_MODIFYTIMESTAMP_ATTRIBUTE);
         String KeycloakUserEmailAttribute = config.getConfig().get(CONF_KEYCLOAK_USER_EMAIL_ATTRIBUTE);
-        String KeycloakUserEmailModifytimestampAttribute = config.getConfig().get(CONF_KEYCLOAK_USER_EMAIL_MODIFYTIMESTAMP_ATTRIBUTE);
         String KeycloakUserEnrollfactor1Attribute = config.getConfig().get(CONF_KEYCLOAK_USER_ENROLLFACTOR1_ATTRIBUTE);
         String KeycloakUserEnrollfactor2Attribute = config.getConfig().get(CONF_KEYCLOAK_USER_ENROLLFACTOR2_ATTRIBUTE);
         //API

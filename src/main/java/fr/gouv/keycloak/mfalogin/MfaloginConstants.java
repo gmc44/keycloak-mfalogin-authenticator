@@ -4,9 +4,7 @@ public class MfaloginConstants {
     //Extension Parameters
      //MOBILE
     public static final String CONF_KEYCLOAK_USER_MOBILE_ATTRIBUTE = "mfalogin.keycloak.user.mobile.attribute";
-    public static final String CONF_KEYCLOAK_USER_MOBILE_MODIFYTIMESTAMP_ATTRIBUTE = "mfalogin.keycloak.user.mobile.modifytimestamp.attribute";
     public static final String CONF_KEYCLOAK_USER_EMAIL_ATTRIBUTE = "mfalogin.keycloak.user.email.attribute";
-    public static final String CONF_KEYCLOAK_USER_EMAIL_MODIFYTIMESTAMP_ATTRIBUTE = "mfalogin.keycloak.user.email.modifytimestamp.attribute";
     public static final String CONF_KEYCLOAK_USER_ENROLLFACTOR1_ATTRIBUTE = "mfalogin.keycloak.user.enrollfactor1.attribute";
     public static final String CONF_KEYCLOAK_USER_ENROLLFACTOR2_ATTRIBUTE = "mfalogin.keycloak.user.enrollfactor2.attribute";
      //API
