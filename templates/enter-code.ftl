@@ -48,7 +48,10 @@
 
         // desactivation du bouton "renvoyer" pendant les 15 premieres secondes
         resendCode.disabled = true;
-        setTimeout(function(){resendCode.disabled = false;},15000);
+        setTimeout(function(){
+            resendCode.disabled = false;
+            resendCode.title = "";
+            },15000);
         
         // Controle de la saisie du code
         codeInput.addEventListener("keyup", () => {
@@ -88,8 +91,8 @@
           <details>
             <summary>Je n'ai pas reçu le code</summary>
             <div id="formfailed" class="collapse">
-              <input tabindex="6" formnovalidate class="${properties.kcButtonClass!}" name="resendCode" id="resendCode" type="submit" value="Renvoyer"/>
-              <input tabindex="7" formnovalidate class="${properties.kcButtonClass!}" name="new2fa" id="new2fa" type="submit" value="Je veux changer de second facteur"/>
+              <input tabindex="6" formnovalidate class="${properties.kcButtonClass!}" name="resendCode" id="resendCode" type="submit" value="Renvoyer" title="Veuillez patienter avant de demander l'envoi d'un nouveau code"/>
+              <input tabindex="7" formnovalidate class="${properties.kcButtonClass!}" name="new2fa" id="new2fa" type="submit" value="Choisir une autre m&eacute;thode"/>
             </div>
           </details>
         </form>
