@@ -11,6 +11,7 @@ import org.apache.http.entity.StringEntity;
 import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.authentication.AuthenticationFlowError;
 import org.keycloak.authentication.authenticators.browser.AbstractUsernameFormAuthenticator;
+import org.keycloak.events.Details;
 import org.keycloak.models.AuthenticatorConfigModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.LDAPConstants;
@@ -152,7 +153,6 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
                         String msgresnotif = api.post(ApiMfaSendUserNotif,data);
                         ServicesLogger.LOGGER.info(uid+": Send Notif = "+msgresnotif);
                     }
-                    context.success();
                 } else if (emailNote != null) {
                     //cas email
                     String emailLdap = user.getFirstAttribute(KeycloakUserEmailAttribute);
@@ -181,12 +181,11 @@ public class MfaLoginAuthenticator extends AbstractUsernameFormAuthenticator
                         String msgresnotif = api.post(ApiMfaSendUserNotif,data);
                         ServicesLogger.LOGGER.info(uid+": Send Notif = "+msgresnotif);
                     }
-                    context.success();      
-                } else {
-                    //Access allowed, nothing to save in ldap
-                    context.success();
                 }
-                
+                // Remember Me when MFA
+                context.getAuthenticationSession().setAuthNote(Details.REMEMBER_ME, "true");
+                context.getEvent().detail(Details.REMEMBER_ME, "true");
+                context.success();
             } else {
                 context.failureChallenge(AuthenticationFlowError.INVALID_CREDENTIALS,
                                          context.form().createForm(smartForm(context)));
